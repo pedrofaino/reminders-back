@@ -1,5 +1,5 @@
 const { MongoClient } = require("mongodb");
-const debug = require("debug")("app:module-database");
+const debug = require("debug")("app:module-databases");
 const { Config } = require("../config/index.js");
 
 var connection = null;
