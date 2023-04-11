@@ -1,37 +1,17 @@
-const express = require('express');
-const debug = require('debug')('app:main');
-const path = require('path');
-const passport = require('passport');
-const flash = require('connect-flash');
-const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const {Config} = require('./src/config/index.js');
-const {UsersApi} = require("./src/users/index.js");
+import "dotenv/config";
+import "./src/database/index.js"
+import express from "express";
+import authRouter from "./src/routes/auth.route.js";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
-//middlewares 
-app.use(morgan('dev'));
 app.use(express.json());
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({extended:false}));
-app.use(session({
-    secret:'pedrofaino',
-    resave:false,
-    saveUninitialized: false,
-}))
-app.use(passport.initialize);
-app.use(passport.session());
-app.use(flash());
+app.use('/api/v1', authRouter);
 
-UsersApi(app);
 
-//routes
-require('./app/routes'(app,passport))
-
-app.listen(Config.port, ()=>{
-    debug(`Servidor escuchando en el puerto ${Config.port}`)
-})
-
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, ()=>{
+    console.log(`Servidor escuchando en el puerto ${PORT}`)
+});
