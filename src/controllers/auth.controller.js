@@ -1,6 +1,6 @@
 import { User } from "../models/User.js";
 import jwt from "jsonwebtoken";
-import { generateToken } from "../utils/tokenManager.js";
+import { generateRefreshToken, generateToken } from "../utils/tokenManager.js";
 
 export const register = async (req, res) => {
   const { email, password } = req.body;
@@ -38,9 +38,10 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: "Credenciales incorrectas." });
     }
 
-    //jwt
-
+    //generar el token jwt
     const { token, expiresIn } = generateToken(user.id);
+
+    generateRefreshToken(user.id, res);
 
     return res.json({ token, expiresIn });
   } catch (error) {
@@ -57,3 +58,33 @@ export const infoUser = async (req, res) => {
     return res.status(500).json({ error: "error de server." });
   }
 };
+
+export const refreshToken = (req, res) => {
+  try {
+    const refreshTokenCookie = req.cookies.refreshToken;
+    if (!refreshTokenCookie) throw new Error("No existe el token");
+
+    const { uid } = jwt.verify(refreshTokenCookie, process.env.JWT_REFRESH);
+    
+    const { token, expiresIn } = generateToken(uid);
+
+    return res.json({token, expiresIn});
+
+  } catch (error) {
+    const TokenVerificationErrors = {
+      "invalid signature": "La firma del JWT no es válida",
+      "jwt expired": "JWT expirado",
+      "invalid token": "Token no válido",
+      "No Bearer": "Utiliza formato Bearer",
+      "jwt malformed": "JWT fortmato no válido",
+    };
+    return res
+      .status(401)
+      .send({ error: TokenVerificationErrors[error.message] });
+  }
+};
+
+export const logout = (req,res) =>{
+  res.clearCookie('refreshToken')
+  res.json({ok:true})
+}

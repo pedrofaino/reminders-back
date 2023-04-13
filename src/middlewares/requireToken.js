@@ -17,10 +17,11 @@ export const requireToken = (req, res, next) => {
     console.log(error);
 
     const TokenVerificationErrors = {
-      "invalid signature": "La firma del JWT no es válida.",
+      "invalid signature": "La firma del JWT no es válida",
       "jwt expired": "JWT expirado",
       "invalid token": "Token no válido",
       "No Bearer": "Utiliza formato Bearer",
+      "jwt malformed": "JWT fortmato no válido",
     };
 
     return res
