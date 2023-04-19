@@ -1,5 +1,4 @@
 import { User } from "../models/User.js";
-import jwt from "jsonwebtoken";
 import { generateRefreshToken, generateToken } from "../utils/tokenManager.js";
 
 export const register = async (req, res) => {
@@ -12,7 +11,10 @@ export const register = async (req, res) => {
     user = new User({ email, password });
     await user.save();
 
-    //jwt token
+    const { token, expiresIn } = generateToken(user.id);
+    generateRefreshToken(user.id, res);
+
+    return res.status(201).json({ token, expiresIn });
   } catch (error) {
     console.log(error.code);
     if (error.code === 11000) {
@@ -37,8 +39,6 @@ export const login = async (req, res) => {
     if (!responsePassword) {
       return res.status(400).json({ error: "Credenciales incorrectas." });
     }
-
-    //generar el token jwt
     const { token, expiresIn } = generateToken(user.id);
 
     generateRefreshToken(user.id, res);
@@ -61,30 +61,16 @@ export const infoUser = async (req, res) => {
 
 export const refreshToken = (req, res) => {
   try {
-    const refreshTokenCookie = req.cookies.refreshToken;
-    if (!refreshTokenCookie) throw new Error("No existe el token");
+    const { token, expiresIn } = generateToken(req.uid);
 
-    const { uid } = jwt.verify(refreshTokenCookie, process.env.JWT_REFRESH);
-    
-    const { token, expiresIn } = generateToken(uid);
-
-    return res.json({token, expiresIn});
-
+    return res.json({ token, expiresIn });
   } catch (error) {
-    const TokenVerificationErrors = {
-      "invalid signature": "La firma del JWT no es válida",
-      "jwt expired": "JWT expirado",
-      "invalid token": "Token no válido",
-      "No Bearer": "Utiliza formato Bearer",
-      "jwt malformed": "JWT fortmato no válido",
-    };
-    return res
-      .status(401)
-      .send({ error: TokenVerificationErrors[error.message] });
+    console.log(error);
+    return res.status(500).json({ error: "Error de servidor." });
   }
 };
 
-export const logout = (req,res) =>{
-  res.clearCookie('refreshToken')
-  res.json({ok:true})
-}
+export const logout = (req, res) => {
+  res.clearCookie("refreshToken");
+  res.json({ ok: true });
+};
