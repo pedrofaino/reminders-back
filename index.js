@@ -1,12 +1,33 @@
-const express = require('express');
-const debug = require('debug')('app:main');
-
-const {Config}=require('./src/config/index.js');
+import "dotenv/config";
+import "./src/database/index.js"
+import express from "express";
+import authRouter from "./src/routes/auth.route.js";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import linkRouter from "./src/routes/link.route.js"
 
 const app = express();
 
-app.use(express.json());
+const whiteList = [process.env.ORIGIN1]
 
-app.listen(Config.port, ()=>{
-    debug(`Servidor escuchando en el puerto ${Config.port}`)
-})
+app.use(cors({
+    origin:function(origin, callback){
+        if(whiteList.includes(origin)){
+            return callback(null, origin)
+        }
+        return callback("Error de CORS origin: "+origin+" no autorizado.")
+    }
+}));
+
+app.use(express.json());
+app.use(cookieParser());
+
+
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/links', linkRouter);
+
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, ()=>{
+    console.log(`Servidor escuchando en el puerto ${PORT}`)
+});
