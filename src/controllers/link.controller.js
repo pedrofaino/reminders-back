@@ -32,7 +32,7 @@ export const getLink = async (req, res) => {
   }
 };
 
-export const createLink = async (res, req) => {
+export const createLink = async (req, res) => {
   try {
     let { longLink } = req.body;
     if (!longLink.startsWith("https://")) {
