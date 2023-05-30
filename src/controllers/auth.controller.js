@@ -1,10 +1,12 @@
 import { User } from "../models/User.js";
+import { getGoogleUser,getGoogleOAuthTokens,findAndUpdateUser } from "../service/auth.service.js";
 import { generateRefreshToken, generateToken } from "../utils/tokenManager.js";
 
 export const register = async (req, res) => {
   const { email, password } = req.body;
   try {
     //validacion
+    console.log(req)
     let user = await User.findOne({ email });
     if (user) throw { code: 11000 };
 
@@ -49,6 +51,42 @@ export const login = async (req, res) => {
     return res.status(500).json({ error: "Error de servidor." });
   }
 };
+
+export const googleOauthHandler = async(req,res) =>{
+  try {
+    const code = req.query.code;
+    const {id_token,access_token} = await getGoogleOAuthTokens({code});
+    const googleUser = await getGoogleUser({id_token, access_token});
+    // jwt.decode(id_token)
+    // console.log({googleUser})
+
+    if(!googleUser.verified_email){
+        return res.status(403).send('Google account is not verified.')
+    }
+    const user = await findAndUpdateUser(
+        {
+          email: googleUser.email,
+        },
+        {
+          email: googleUser.email,
+          name: googleUser.name,
+          picture: googleUser.picture,
+        },
+        {
+          upsert: true,
+          new: true,
+        }
+    );
+    const { token, expiresIn } = generateToken(user.id);
+    generateRefreshToken(user.id, res);
+    
+    // return res.status(201).json({ token, expiresIn });
+    return res.redirect(`${process.env.ORIGIN1}/main`);
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: "Error de servidor." });
+}
+}
 
 export const infoUser = async (req, res) => {
   try {

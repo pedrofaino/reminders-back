@@ -3,7 +3,6 @@ import { Reminder } from "../models/Reminder.js";
 export const getReminders = async (req, res) => {
   try {
     const reminders = await Reminder.find({ uid: req.uid });
-
     return res.json({ reminders });
   } catch (error) {
     console.log(error);
@@ -16,7 +15,7 @@ export const getReminder = async (req, res) => {
     const { id } = req.params;
     const reminder = await Reminder.findById(id);
 
-    if (!reminder) return res.status(404).json({ error: "No existe el link." });
+    if (!reminder) return res.status(404).json({ error: "No existe el reminder." });
 
     if (!reminder.uid.equals(req.uid))
       return res.status(401).json({ error: "No le pertenece ese id." });
@@ -47,13 +46,16 @@ export const removeReminder = async (req, res) => {
   try {
     const { id } = req.params;
     const reminder = await Reminder.findById(id);
+
     if (!reminder) return res.status(404).json({ error: "No existe el reminder." });
+    
     if (!reminder.uid.equals(req.uid))
       return res.status(401).json({ error: "No le pertenece ese id." });
 
     await reminder.deleteOne();
 
     return res.status(200).json({ message: "El recordatorio fue eliminado." });
+    
   } catch (error) {
 
     console.log(error);
