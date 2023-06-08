@@ -77,6 +77,7 @@ export const googleOauthHandler = async(req,res) =>{
           new: true,
         }
     );
+
     const { token, expiresIn } = generateToken(user.id);
     generateRefreshToken(user.id, res);
     
