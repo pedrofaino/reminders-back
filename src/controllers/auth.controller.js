@@ -1,22 +1,34 @@
 import { User } from "../models/User.js";
 import { getGoogleUser,getGoogleOAuthTokens,findAndUpdateUser } from "../service/auth.service.js";
 import { generateRefreshToken, generateToken } from "../utils/tokenManager.js";
+import { transporter } from "../utils/mailer.js";
 
 export const register = async (req, res) => {
   const { email, password } = req.body;
   try {
     //validacion
-    console.log(req)
     let user = await User.findOne({ email });
     if (user) throw { code: 11000 };
 
     user = new User({ email, password });
+
+    const url = `http://localhost:3000/confirmation?email=${email}`
+    
+    try{
+      await transporter.sendMail({
+        from: '"New Reminder" <reminders.new.info@gmail.com>', // sender address
+        to: email, // list of receivers
+        subject: "Confirmacion de correo", // Subject line
+        text: "Confirmacion de correo", // plain text body
+        html: `<b>Presiona el siguiente link para confirmar el email: ${url}`, // html body
+      });
+    }catch(error){
+      console.log(error)
+    }
+
     await user.save();
 
-    const { token, expiresIn } = generateToken(user.id);
-    generateRefreshToken(user.id, res);
-
-    return res.status(201).json({ token, expiresIn });
+    return res.status(201).json({email});
   } catch (error) {
     console.log(error.code);
     if (error.code === 11000) {
@@ -28,13 +40,50 @@ export const register = async (req, res) => {
   }
 };
 
+export const confirmation = async(req,res) => {
+  try {
+    const { email } = req.body;
+
+    let user = await User.findOne({email});
+
+    user.confirmed = true;
+
+    await user.save();
+
+    const { token, expiresIn } = generateToken(user.id);
+    generateRefreshToken(user.id, res);
+
+    return res.json({ token, expiresIn });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     let user = await User.findOne({ email });
+
     if (!user) {
       return res.status(403).json({ error: "Credenciales incorrectas." });
+    }
+
+    const url = `http://localhost:3000/confirmation?email=${email}`
+
+    if(!user.confirmed){
+      try{
+        await transporter.sendMail({
+          from: '"New Reminder" <reminders.new.info@gmail.com>', // sender address
+          to: email, // list of receivers
+          subject: "Confirmacion de correo", // Subject line
+          text: "Confirmacion de correo", // plain text body
+          html: `<b>Presiona el siguiente link para confirmar el email: ${url}`, // html body
+        });
+      }catch(error){
+        console.log(error)
+      }
+      return res.status(403).json({ error: "Se ha enviado un email para confirmar, para iniciar sesión confirme su correo." });
     }
 
     const responsePassword = await user.comparePassword(password);
@@ -89,20 +138,15 @@ export const googleOauthHandler = async(req,res) =>{
 }
 }
 
-export const infoUser = async (req, res) => {
+export const refreshToken = async(req, res) => {
   try {
     const user = await User.findById(req.uid).lean();
-    return res.json({ email: user.email, uid: user._id });
-  } catch (error) {
-    return res.status(500).json({ error: "error de server." });
-  }
-};
 
-export const refreshToken = (req, res) => {
-  try {
+    const email = user.email
+
     const { token, expiresIn } = generateToken(req.uid);
 
-    return res.json({ token, expiresIn });
+    return res.json({ token, expiresIn, email });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Error de servidor." });
@@ -113,3 +157,19 @@ export const logout = (req, res) => {
   res.clearCookie("refreshToken");
   res.json({ ok: true });
 };
+
+export const forgotPassword = async (res, req) =>{
+  try {
+    const {email} = req.body;
+    if(!email){
+      return res.return(400).json({message:"Email is required."})
+    }
+    let user = await User.findOne({ email });
+    if (!user) {
+      return res.status(403).json({ error: "Check your email." });
+    }
+
+  } catch (error) {
+    
+  }
+}

@@ -15,8 +15,6 @@ export const requireToken = (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log(error.message);
-
     return res
       .status(401)
       .send({ error: tokenVerificationErrors[error.message] });

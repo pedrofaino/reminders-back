@@ -4,7 +4,7 @@ import { paramLinkValidator,bodyLoginValidator } from "../middlewares/validatorM
 import { createReminder, getReminder, getReminders, removeReminder, updateReminder } from "../controllers/reminders.controller.js";
 const router = Router();
 
-router.get('/',requireToken, getReminders);
+router.get('/search',requireToken, getReminders);
 router.get('/:id',requireToken, getReminder);
 router.post('/',requireToken, createReminder);
 router.delete('/:id',requireToken,paramLinkValidator, removeReminder);
