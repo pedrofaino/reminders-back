@@ -14,6 +14,16 @@ const userSchema = new Schema({
         type:String,
         require:true,
     },
+    name:{
+        type:String,
+    },
+    lastName:{
+        type:String,
+    },
+    confirmed:{
+        type:Boolean,
+        default:false
+    }
 })
 
 userSchema.pre("save", async function(next){
