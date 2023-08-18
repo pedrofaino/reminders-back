@@ -12,7 +12,7 @@ export const register = async (req, res) => {
 
     user = new User({ email, password });
 
-    const url = `http://localhost:3000/confirmation?email=${email}`
+    const url = `https://reminder-s.vercel.app/confirmation?email=${email}`
     
     try{
       await transporter.sendMail({
@@ -69,7 +69,7 @@ export const login = async (req, res) => {
       return res.status(403).json({ error: "Credenciales incorrectas." });
     }
 
-    const url = `http://localhost:3000/confirmation?email=${email}`
+    const url = `https://reminder-s.vercel.app/confirmation?email=${email}`
 
     if(!user.confirmed){
       try{
@@ -129,7 +129,7 @@ export const googleOauthHandler = async(req,res) =>{
 
     const { token, expiresIn } = generateToken(user.id);
     generateRefreshToken(user.id, res);
-    
+
     // return res.status(201).json({ token, expiresIn });
     return res.redirect(`${process.env.ORIGIN1}/main`);
   } catch (error) {
