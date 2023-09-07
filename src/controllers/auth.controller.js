@@ -92,9 +92,11 @@ export const login = async (req, res) => {
     }
     const { token, expiresIn } = generateToken(user.id);
 
-    generateRefreshToken(user.id, res);
+    const { refreshToken } = generateRefreshToken(user.id, res);
 
-    return res.json({ token, expiresIn });
+    const userId = user.id;
+
+    return res.json({ refreshToken, token, expiresIn, userId });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Error de servidor." });
