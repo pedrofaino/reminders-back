@@ -144,11 +144,13 @@ export const refreshToken = async(req, res) => {
   try {
     const user = await User.findById(req.uid).lean();
 
+    const uid = user._id;
+
     const email = user.email
 
     const { token, expiresIn } = generateToken(req.uid);
 
-    return res.json({ token, expiresIn, email });
+    return res.json({ token, expiresIn, email, uid });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Error de servidor." });
