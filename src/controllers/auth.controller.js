@@ -173,7 +173,7 @@ export const loginApp = async (req, res) => {
       return res.status(401).json({ error: "Credenciales incorrectas." });
     }
 
-    const url = `http://remindersconfirmation.com?email=${email}`
+    const url = `reminders://confirmation.com?email=${email}`
 
     if (!user.confirmed) {
       try {
@@ -192,7 +192,7 @@ export const loginApp = async (req, res) => {
 
     const responsePassword = await user.comparePassword(password);
     if (!responsePassword) {
-      return res.status(400).json({ error: "Credenciales incorrectas." });
+      return res.status(401).json({ error: "Credenciales incorrectas." });
     }
     const { token, expiresIn } = generateToken(user.id);
 
